@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Via Uno - HR Analytics</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f9fafb',
+                            100: '#f3f4f6',
+                            500: '#374151',
+                            600: '#1f2937',
+                            700: '#111827',
+                            800: '#0f172a',
+                            900: '#000000',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .hover-card {
+            transition: all 0.3s ease;
+        }
+        .hover-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+        /* Hide scrollbar for clean sidebar look */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased h-screen flex overflow-hidden">
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto relative no-scrollbar pb-10">
+        <div class="max-w-[90rem] mx-auto px-6 lg:px-10 py-8">
+            <!-- Header Auth -->
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold text-gray-900">RH Analytics</h1>
+                <div class="flex items-center gap-3">
+                    <!-- Removed as requested, sidebar already handles user info and actions -->
+                </div>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="mb-6 p-4 rounded-lg flex items-center gap-3 font-medium text-sm
+                            {% if category == 'error' %}bg-red-50 border border-red-200 text-red-600
+                            {% elif category == 'success' %}bg-green-50 border border-green-200 text-green-600
+                            {% else %}bg-blue-50 border border-blue-200 text-blue-600{% endif %}">
+                            <i class="fa-solid {% if category == 'error' %}fa-triangle-exclamation{% elif category == 'success' %}fa-check-circle{% else %}fa-circle-info{% endif %}"></i>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <!-- Loading Spinner -->
+            <div id="loader" class="flex justify-center items-center py-32">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600"></div>
+            </div>
+
+            <!-- Dashboard Content (Hidden initially) -->
+            <div id="dashboardContent" class="hidden flex-col space-y-8 fade-in">
+                
+                <!-- KPI Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Card 1 -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between hover-card">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500 mb-1">Total Funcionários</p>
+                                <h3 class="text-3xl font-bold text-gray-900" id="kpiTotalPessoas">0</h3>
+                            </div>
+                            <div class="p-3 bg-blue-50 rounded-xl text-blue-600">
+                                <i class="fa-solid fa-users text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center text-sm">
+                            <span class="text-gray-500" id="kpiTotalPessoasSub">CLT Ativos neste mês</span>
+                        </div>
+                    </div>
+
+                    <!-- Card 2 -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between hover-card">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500 mb-1">Custo Total (R$)</p>
+                                <h3 class="text-2xl font-bold text-gray-900" id="kpiCustoTotal">R$ 0,00</h3>
+                            </div>
+                            <div class="p-3 bg-emerald-50 rounded-xl text-emerald-600">
+                                <i class="fa-solid fa-sack-dollar text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center text-sm">
+                            <span class="text-gray-500" id="kpiCustoTotalSub">Folha total mensal</span>
+                        </div>
+                    </div>
+
+                    <!-- Card 3 -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between hover-card">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500 mb-1">Turnover</p>
+                                <h3 class="text-3xl font-bold text-gray-900" id="kpiTurnover">0</h3>
+                            </div>
+                            <div class="p-3 bg-gray-100 rounded-xl text-gray-800">
+                                <i class="fa-solid fa-rotate text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center text-sm">
+                            <span id="kpiTurnoverSub" class="text-gray-500">Turnover Geral (CAGED)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Table (moved above charts) -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                        <h3 class="text-lg font-semibold text-gray-800">Detalhamento por Centro de Custo</h3>
+                        <button class="text-sm text-brand-600 font-medium hover:text-brand-800 transition-colors">
+                            <i class="fa-solid fa-download mr-1"></i> Exportar
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto overflow-y-auto max-h-[480px]">
+                        <table class="min-w-full divide-y divide-gray-200 relative">
+                            <thead class="bg-gray-900 text-white sticky top-0 z-10">
+                                <tr>
+                                    <th id="thAgrupador" scope="col" class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider sticky top-0 bg-gray-900 z-10">Centro de Custo</th>
+                                    <th scope="col" class="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider border-l border-gray-700">Total Pessoas</th>
+                                    <th scope="col" class="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider border-l border-gray-700">Qtd CLT</th>
+                                    <th scope="col" class="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider border-l border-gray-700">Qtd PJ</th>
+                                    <th scope="col" class="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider border-l border-gray-700">% Pessoas</th>
+                                    <th scope="col" class="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider border-l border-gray-700">Custo Total (R$)</th>
+                                    <th scope="col" class="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider border-l border-gray-700">% Custo</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dataTableBody" class="bg-white divide-y divide-gray-200">
+                                <!-- Rows will be dynamically populated -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Historical Cost Chart -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Evolução de Custos</h3>
+                        <div class="relative h-64 w-full">
+                            <canvas id="histCostChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Historical People -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Evolução de Funcionários</h3>
+                        <div class="relative h-64 w-full">
+                            <canvas id="histPeopleChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Historical Turnover -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Turnover (Entradas vs Saídas)</h3>
+                        <div class="relative h-64 w-full">
+                            <canvas id="histTurnoverChart"></canvas>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Historical Charts Section -->
+            </div>
+
+            <!-- Detalhe Content (Hidden initially) -->
+            <div id="detalheContent" class="hidden flex-col space-y-6 fade-in">
+                <!-- Header & Voltar -->
+                <div class="flex items-center justify-between mb-4">
+                    <button id="btnVoltar" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-sm font-semibold text-gray-700 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        Voltar ao Dashboard Geral
+                    </button>
+                    <h2 class="text-2xl font-bold text-gray-900 tracking-tight" id="detalheTitle">Visão 360</h2>
+                </div>
+
+                <!-- New Historical Table -->
+                <div class="mb-6 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-base font-semibold text-gray-800">Histórico Detalhado por Pessoa</h4>
+                        <div class="flex items-center gap-2">
+                            <label class="text-xs font-medium text-gray-500">Valores:</label>
+                            <select id="valorTypeFilter" class="text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 py-1 pl-2 pr-8">
+                                <option value="custo">Custo Total da Empresa</option>
+                                <option value="remuneracao">Remuneração Recebida (Salário + Adicional)</option>
+                            </select>
+                            
+                            <label class="text-xs font-medium text-gray-500 ml-2">Visualizar:</label>
+                            <select id="activePessoasFilter" class="text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 py-1 pl-2 pr-8">
+                                <option value="ativos">Apenas Ativos (Mês Vigente)</option>
+                                <option value="todos">Todos do Ano</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto overflow-y-auto max-h-[500px]">
+                        <table class="min-w-full divide-y divide-gray-200 relative">
+                            <thead class="bg-gray-900 text-white sticky top-0 z-10" id="histPessoasThead">
+                                <!-- Dynamically generated by JS -->
+                            </thead>
+                            <tbody id="histPessoasBody" class="bg-white divide-y divide-gray-200">
+                                <!-- Dynamically generated by JS -->
+                            </tbody>
+                            <tfoot id="histPessoasTfoot" class="bg-gray-100 sticky bottom-0 z-10">
+                                <!-- Dynamically generated by JS -->
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Grid de Gráficos -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
+                    <!-- Chart 1: Custo e Participação -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                        <h4 class="text-base font-semibold text-gray-800 mb-4">Evolução de Custo</h4>
+                        <div class="relative h-72 w-full">
+                            <canvas id="modalCostChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Chart 2: Pessoas e Participação -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                        <h4 class="text-base font-semibold text-gray-800 mb-4">Evolução de Funcionários</h4>
+                        <div class="relative h-72 w-full">
+                            <canvas id="modalPeopleChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Chart 3: Turnover -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                        <h4 class="text-base font-semibold text-gray-800 mb-4">Turnover Setorial</h4>
+                        <div class="relative h-72 w-full">
+                            <canvas id="modalTurnoverChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Right Sidebar (Fixed Full Height) -->
+    {% include "sidebar.html" %}
+
+
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

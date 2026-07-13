@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} – Via Uno RH</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #f8fafc;
+            --sidebar: #0f172a;
+            --accent: #10b981;
+            --accent-dark: #059669;
+            --danger: #ef4444;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --card: #ffffff;
+        }
+
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; height: 100vh; }
+        .topbar { background: var(--card); border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; }
+        .topbar h1 { font-size: 18px; font-weight: 700; }
+        .topbar-actions { display: flex; gap: 10px; }
+
+        .content { padding: 28px 32px; flex: 1; }
+
+        .form-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+        .form-card-header { padding: 18px 24px; border-bottom: 1px solid var(--border); }
+        .form-card-header h2 { font-size: 15px; font-weight: 700; }
+        .form-body { padding: 24px; }
+
+        .section-title {
+            font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;
+            color: var(--text-muted); margin: 24px 0 14px;
+            padding-bottom: 8px; border-bottom: 1px solid var(--border);
+        }
+        .section-title:first-child { margin-top: 0; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .grid-6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+        .span-2 { grid-column: span 2; }
+
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
+        input, select, textarea {
+            padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px;
+            font-family: 'Inter', sans-serif; font-size: 13px; color: var(--text);
+            background: #fff; outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--accent); box-shadow: 0 0 0 3px rgba(16,185,129,0.12);
+        }
+        textarea { resize: vertical; min-height: 70px; }
+
+        .ativo-toggle { display: flex; align-items: center; gap: 8px; padding: 9px 0; }
+        .ativo-toggle input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+        .ativo-toggle label { text-transform: none; font-size: 13px; font-weight: 500; color: var(--text); letter-spacing: 0; cursor: pointer; }
+
+        .form-footer {
+            padding: 16px 24px; border-top: 1px solid var(--border);
+            display: flex; align-items: center; gap: 12px; justify-content: flex-end;
+        }
+
+        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; border: none; text-decoration: none; transition: all 0.15s; }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-primary:hover { background: var(--accent-dark); }
+        .btn-secondary { background: #f1f5f9; color: var(--text-muted); }
+        .btn-secondary:hover { background: #e2e8f0; }
+
+        .flash-msg { padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+        .flash-error { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+
+        /* money inputs */
+        .money-label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-align: center; margin-bottom: 3px; }
+        .money-input { text-align: right; }
+
+        @media (max-width: 900px) {
+            .grid-6 { grid-template-columns: repeat(3, 1fr); }
+            .grid-4 { grid-template-columns: repeat(2, 1fr); }
+            .grid-3 { grid-template-columns: 1fr 1fr; }
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    
+
+    <div class="main">
+        <div class="topbar">
+            <h1>{{ title }}</h1>
+            <div class="topbar-actions">
+                <a href="{{ url_for('admin') }}" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
+            </div>
+        </div>
+
+        <div class="content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                    <div class="flash-msg flash-{{ category }}">⚠️ {{ message }}</div>
+                {% endfor %}
+            {% endwith %}
+
+            <form method="POST">
+                <div class="form-card">
+                    <div class="form-card-header">
+                        <h2>Dados do Contratado</h2>
+                    </div>
+                    <div class="form-body">
+                        <!-- Dados Básicos -->
+                        <div class="section-title">Identificação</div>
+                        <div class="grid-2">
+                            <div class="form-group span-2">
+                                <label for="nome">Nome / Razão Social *</label>
+                                <input type="text" id="nome" name="nome" value="{{ pj.nome if pj else '' }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="cnpj">CNPJ *</label>
+                                <input type="text" id="cnpj" name="cnpj" value="{{ pj.cnpj if pj else '' }}" required placeholder="00.000.000/0000-00">
+                            </div>
+                            <div class="form-group">
+                                <label for="razao_social">Razão Social</label>
+                                <input type="text" id="razao_social" name="razao_social" value="{{ pj.razao_social if pj else '' }}">
+                            </div>
+                        </div>
+
+                        <!-- Contrato -->
+                        <div class="section-title">Contrato</div>
+                        <div class="grid-3">
+                            <div class="form-group">
+                                <label for="cargo">Cargo / Função</label>
+                                <input type="text" id="cargo" name="cargo" value="{{ pj.cargo if pj else '' }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="centro_custo">Centro de Custo</label>
+                                <input type="text" id="centro_custo" name="centro_custo" value="{{ pj.centro_custo if pj else '' }}">
+                            </div>
+                            <div class="form-group">
+                                <div class="ativo-toggle">
+                                    <input type="checkbox" id="ativo" name="ativo" {{ 'checked' if (not pj or pj.ativo) else '' }}>
+                                    <label for="ativo">Contrato Ativo</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="data_inicio">Data de Início</label>
+                                <input type="date" id="data_inicio" name="data_inicio" value="{{ pj.data_inicio.isoformat() if pj and pj.data_inicio else '' }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="data_encerramento">Data de Encerramento</label>
+                                <input type="date" id="data_encerramento" name="data_encerramento" value="{{ pj.data_encerramento.isoformat() if pj and pj.data_encerramento else '' }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="observacoes">Observações</label>
+                                <input type="text" id="observacoes" name="observacoes" value="{{ pj.observacoes if pj else '' }}">
+                            </div>
+                        </div>
+
+                        <!-- Valores -->
+                        <div class="section-title">Valores Mensais (R$)</div>
+                        <div class="grid-4">
+                            <div class="form-group">
+                                <label for="valor_2025">2025 (Ref.)</label>
+                                <input type="number" id="valor_2025" name="valor_2025" class="money-input" step="0.01" min="0" value="{{ pj.valor_2025 or '' if pj else '' }}" placeholder="0,00">
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 14px;">
+                            <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 10px;">2026</div>
+                            <div class="grid-6">
+                                {% set months_2026 = [
+                                    ('Jan', 'valor_jan_2026'), ('Fev', 'valor_fev_2026'), ('Mar', 'valor_mar_2026'),
+                                    ('Abr', 'valor_abr_2026'), ('Mai', 'valor_mai_2026'), ('Jun', 'valor_jun_2026'),
+                                    ('Jul', 'valor_jul_2026'), ('Ago', 'valor_ago_2026'), ('Set', 'valor_set_2026'),
+                                    ('Out', 'valor_out_2026'), ('Nov', 'valor_nov_2026'), ('Dez', 'valor_dez_2026')
+                                ] %}
+                                {% for label_m, field in months_2026 %}
+                                <div class="form-group">
+                                    <label for="{{ field }}" style="text-align:center;">{{ label_m }}</label>
+                                    <input type="number" id="{{ field }}" name="{{ field }}" class="money-input" step="0.01" min="0"
+                                           value="{{ pj[field] or '' if pj and pj[field] else (pj|attr(field) if pj else '') }}" placeholder="0">
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-footer">
+                        <a href="{{ url_for('admin') }}" class="btn btn-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            {{ 'Salvar Alterações' if pj else 'Cadastrar PJ' }}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% include "sidebar.html" %}
+</body>
+</html>

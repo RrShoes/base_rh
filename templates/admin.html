@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin – Gestão de PJs | Via Uno RH</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #f8fafc;
+            --sidebar: #0f172a;
+            --accent: #10b981;
+            --accent-dark: #059669;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --card: #ffffff;
+        }
+
+        /* MAIN */
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; height: 100vh; }
+
+        .topbar {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 32px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .topbar h1 { font-size: 18px; font-weight: 700; }
+        .topbar-actions { display: flex; align-items: center; gap: 12px; }
+
+        .content { padding: 28px 32px; flex: 1; overflow-y: auto; }
+
+        /* CARDS STATS */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 28px; }
+        .stat-card {
+            background: var(--card); border-radius: 12px;
+            border: 1px solid var(--border); padding: 16px 20px;
+        }
+        .stat-card p { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-card h3 { font-size: 26px; font-weight: 700; margin-top: 4px; }
+
+        /* TABLE CARD */
+        .table-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        .table-header {
+            padding: 18px 24px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap; gap: 12px;
+        }
+        .table-header h2 { font-size: 15px; font-weight: 700; }
+
+        .search-box {
+            display: flex; align-items: center; gap: 8px;
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: 8px; padding: 7px 12px;
+        }
+        .search-box input {
+            border: none; background: none; outline: none;
+            font-family: 'Inter', sans-serif; font-size: 13px; color: var(--text); min-width: 200px;
+        }
+        .search-box i { color: var(--text-muted); font-size: 13px; }
+
+        table { width: 100%; border-collapse: collapse; }
+        thead th {
+            background: #f8fafc; padding: 11px 16px;
+            text-align: left; font-size: 11px; font-weight: 700;
+            color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+        }
+        tbody tr { transition: background 0.1s; }
+        tbody tr:hover { background: #f8fafc; }
+        tbody td { padding: 11px 16px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        tbody tr:last-child td { border-bottom: none; }
+
+        .badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600;
+        }
+        .badge-green { background: #dcfce7; color: #15803d; }
+        .badge-red   { background: #fee2e2; color: #b91c1c; }
+
+        /* BUTTONS */
+        .btn { display: inline-flex; align-items: center; gap-6px; padding: 8px 16px; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; border: none; text-decoration: none; transition: all 0.15s; }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-primary:hover { background: var(--accent-dark); }
+        .btn-danger  { background: #fee2e2; color: var(--danger); }
+        .btn-danger:hover { background: #fecaca; }
+        .btn-edit    { background: #eff6ff; color: #2563eb; }
+        .btn-edit:hover { background: #dbeafe; }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+        .actions { display: flex; gap: 6px; }
+
+        /* ALERT */
+        .flash-msg {
+            padding: 12px 16px; border-radius: 10px; margin-bottom: 20px;
+            font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px;
+        }
+        .flash-success { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+        .flash-error   { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+
+        /* Empty state */
+        .empty { text-align: center; padding: 48px; color: var(--text-muted); }
+        .empty i { font-size: 40px; margin-bottom: 12px; opacity: 0.3; }
+        .empty p { font-size: 14px; }
+
+        /* Modal confirm */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5); z-index: 1000;
+            align-items: center; justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            background: #fff; border-radius: 16px; padding: 28px 32px;
+            max-width: 380px; width: 90%; text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+        }
+        .modal-box h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+        .modal-box p { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
+        .modal-actions { display: flex; gap: 10px; justify-content: center; }
+    </style>
+</head>
+<body class="bg-gray-50 flex h-screen overflow-hidden antialiased">
+    <!-- MAIN -->
+    <div class="main flex-1">
+        <div class="topbar">
+            <h1>Gestão de Contratos PJ</h1>
+            <div class="topbar-actions">
+                <a href="{{ url_for('admin_usuarios') }}" class="btn" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;">
+                    <i class="fa-solid fa-users-gear"></i> &nbsp;Usuários
+                </a>
+                <a href="{{ url_for('pj_novo') }}" class="btn btn-primary">
+                    <i class="fa-solid fa-plus"></i> &nbsp;Novo PJ
+                </a>
+            </div>
+        </div>
+
+        <div class="content">
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                    <div class="flash-msg flash-{{ category }}">
+                        {% if category == 'success' %}✅{% else %}⚠️{% endif %} {{ message }}
+                    </div>
+                {% endfor %}
+            {% endwith %}
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <p>Total Cadastrados</p>
+                    <h3>{{ pjs | length }}</h3>
+                </div>
+                <div class="stat-card">
+                    <p>Ativos</p>
+                    <h3 style="color: #15803d;">{{ pjs | selectattr('ativo') | list | length }}</h3>
+                </div>
+                <div class="stat-card">
+                    <p>Inativos</p>
+                    <h3 style="color: #b91c1c;">{{ pjs | rejectattr('ativo') | list | length }}</h3>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="table-card">
+                <div class="table-header">
+                    <h2>Listagem de PJs</h2>
+                    <form method="GET" style="margin:0">
+                        <div class="search-box">
+                            <i class="fa-solid fa-search"></i>
+                            <input type="text" name="q" value="{{ search }}" placeholder="Buscar por nome, CNPJ ou CC...">
+                        </div>
+                    </form>
+                </div>
+
+                {% if pjs %}
+                <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>CNPJ</th>
+                            <th>Centro de Custo</th>
+                            <th>Cargo</th>
+                            <th>Início</th>
+                            <th>Jun/2026</th>
+                            <th>Status</th>
+                            <th style="text-align:right">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pj in pjs %}
+                        <tr>
+                            <td><strong>{{ pj.nome }}</strong></td>
+                            <td style="font-family: monospace; font-size: 12px; color: #64748b;">{{ pj.cnpj }}</td>
+                            <td>{{ pj.centro_custo or '—' }}</td>
+                            <td>{{ pj.cargo or '—' }}</td>
+                            <td>{{ pj.data_inicio.strftime('%d/%m/%Y') if pj.data_inicio else '—' }}</td>
+                            <td style="font-weight: 600;">
+                                {% if pj.valor_jun_2026 and pj.valor_jun_2026 > 0 %}
+                                    R$ {{ "%.2f"|format(pj.valor_jun_2026)|replace('.', ',') }}
+                                {% else %}—{% endif %}
+                            </td>
+                            <td>
+                                <span class="badge {{ 'badge-green' if pj.ativo else 'badge-red' }}">
+                                    {{ '● Ativo' if pj.ativo else '○ Inativo' }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="actions" style="justify-content: flex-end;">
+                                    <a href="{{ url_for('pj_editar', pj_id=pj.id) }}" class="btn btn-edit btn-sm">
+                                        <i class="fa-solid fa-pencil"></i>
+                                    </a>
+                                    <button onclick="confirmDelete({{ pj.id }}, '{{ pj.nome|replace("'","\\'")|e }}')" class="btn btn-danger btn-sm">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+                {% else %}
+                <div class="empty">
+                    <i class="fa-solid fa-users-slash"></i>
+                    <p>Nenhum PJ encontrado. <a href="{{ url_for('pj_novo') }}">Cadastrar novo?</a></p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmação de exclusão -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal-box">
+            <h3>⚠️ Confirmar Exclusão</h3>
+            <p id="deleteModalText">Tem certeza que deseja remover este PJ?</p>
+            <div class="modal-actions">
+                <button onclick="closeModal()" class="btn" style="background:#f1f5f9; color:#64748b;">Cancelar</button>
+                <form id="deleteForm" method="POST">
+                    <button type="submit" class="btn btn-danger">Excluir</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function confirmDelete(id, nome) {
+            document.getElementById('deleteModalText').textContent = `Tem certeza que deseja remover "${nome}"? Esta ação não pode ser desfeita.`;
+            document.getElementById('deleteForm').action = `/admin/pj/excluir/${id}`;
+            document.getElementById('deleteModal').classList.add('open');
+        }
+        function closeModal() {
+            document.getElementById('deleteModal').classList.remove('open');
+        }
+        document.getElementById('deleteModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+        // Auto-submit search on input change
+        document.querySelector('.search-box input').addEventListener('input', function() {
+            clearTimeout(this._t);
+            this._t = setTimeout(() => this.closest('form').submit(), 400);
+        });
+    </script>
+    {% include "sidebar.html" %}
+</body>
+</html>

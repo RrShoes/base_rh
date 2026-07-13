@@ -1,0 +1,205 @@
+    <aside class="w-80 flex-shrink-0 bg-white border-l border-gray-200 flex flex-col h-full shadow-[0_0_15px_rgba(0,0,0,0.05)] z-20">
+        
+        <!-- Brand / Logo -->
+        <div class="p-4 border-b border-gray-100 flex items-center gap-4 bg-gray-50/30">
+            <div class="bg-brand-600 text-white p-2 rounded-xl shadow-md">
+                <i class="fa-solid fa-shoe-prints text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-gray-900 leading-tight tracking-tight">Via Uno</h1>
+                <p class="text-[10px] text-gray-500 font-semibold tracking-widest uppercase">HR Analytics</p>
+            </div>
+        </div>
+
+        <!-- Sidebar Content -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar flex flex-col">
+            
+            {% if request.path == '/' %}
+            <!-- Filters Section -->
+            <div>
+                <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-filter"></i>
+                    Filtros
+                </h2>
+                
+                <!-- Year Filter -->
+                <div class="space-y-1">
+                    <label for="yearFilter" class="block text-sm font-medium text-gray-700">Ano (Gráficos)</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa-regular fa-calendar text-gray-400"></i>
+                        </div>
+                        <select id="yearFilter" class="block w-full pl-10 pr-10 py-1.5 text-sm border-gray-300 focus:outline-none focus:ring-brand-500 focus:border-brand-500 rounded-lg shadow-sm bg-gray-50 appearance-none font-semibold text-gray-700 transition-all hover:bg-gray-100 cursor-pointer border">
+                            <!-- Options will be populated by JS -->
+                        </select>
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Month Filter -->
+                <div class="space-y-1 mt-2">
+                    <label for="monthFilter" class="block text-sm font-medium text-gray-700">Mês (Tabela e KPIs)</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa-regular fa-calendar-days text-gray-400"></i>
+                        </div>
+                        <select id="monthFilter" class="block w-full pl-10 pr-10 py-1.5 text-sm border-gray-300 focus:outline-none focus:ring-brand-500 focus:border-brand-500 rounded-lg shadow-sm bg-gray-50 appearance-none font-semibold text-gray-700 transition-all hover:bg-gray-100 cursor-pointer border">
+                            <!-- Options will be populated by JS -->
+                        </select>
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contract Type Filter -->
+                <div class="space-y-1 mt-2">
+                    <label for="contractFilter" class="block text-sm font-medium text-gray-700">Tipo de Contrato</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-file-contract text-gray-400"></i>
+                        </div>
+                        <select id="contractFilter" class="block w-full pl-10 pr-10 py-1.5 text-sm border-gray-300 focus:outline-none focus:ring-brand-500 focus:border-brand-500 rounded-lg shadow-sm bg-gray-50 appearance-none font-semibold text-gray-700 transition-all hover:bg-gray-100 cursor-pointer border">
+                            <option value="todos">Total Geral (CLT + PJ)</option>
+                            <option value="clt">Apenas CLT</option>
+                            <option value="pj">Apenas PJ</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Agrupador Filters -->
+            <div class="pt-4 border-t border-gray-100">
+                <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-layer-group"></i>
+                    Agrupadores
+                </h2>
+
+                <!-- Agrupador 1 -->
+                <div class="space-y-1">
+                    <label class="block text-sm font-medium text-gray-700">Tipo de Área</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-sitemap text-gray-400"></i>
+                        </div>
+                        <select id="agrupador1Filter" class="block w-full pl-10 pr-10 py-1.5 text-sm border-gray-300 focus:outline-none focus:ring-brand-500 focus:border-brand-500 rounded-lg shadow-sm bg-gray-50 appearance-none font-semibold text-gray-700 transition-all hover:bg-gray-100 cursor-pointer border" onchange="applyFilters()">
+                            <option value="">Todos</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Agrupador 2 -->
+                <div class="space-y-1 mt-2">
+                    <label class="block text-sm font-medium text-gray-700">Dono do Pacote</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-user-tie text-gray-400"></i>
+                        </div>
+                        <select id="agrupador2Filter" class="block w-full pl-10 pr-10 py-1.5 text-sm border-gray-300 focus:outline-none focus:ring-brand-500 focus:border-brand-500 rounded-lg shadow-sm bg-gray-50 appearance-none font-semibold text-gray-700 transition-all hover:bg-gray-100 cursor-pointer border" onchange="applyFilters()">
+                            <option value="">Todos</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Agrupador 3 -->
+                <div class="space-y-1 mt-2">
+                    <label class="block text-sm font-medium text-gray-700">Ajuste / Label</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-tag text-gray-400"></i>
+                        </div>
+                        <select id="agrupador3Filter" class="block w-full pl-10 pr-10 py-1.5 text-sm border-gray-300 focus:outline-none focus:ring-brand-500 focus:border-brand-500 rounded-lg shadow-sm bg-gray-50 appearance-none font-semibold text-gray-700 transition-all hover:bg-gray-100 cursor-pointer border" onchange="applyFilters()">
+                            <option value="">Todos</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Menu -->
+            <div class="pt-4 border-t border-gray-100">
+                <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-bars"></i>
+                    Menu
+                </h2>
+                <ul class="space-y-1">
+                    <li>
+                        <a href="{{ url_for('index') }}" class="flex items-center gap-3 px-3 py-1.5 rounded-lg font-medium text-sm transition-colors {% if request.path == '/' %}bg-gray-100 text-gray-900 border border-gray-200{% else %}text-gray-600 hover:bg-gray-100 border border-transparent{% endif %}">
+                            <i class="fa-solid fa-chart-line w-5 text-center {% if request.path == '/' %}text-brand-600{% else %}text-gray-400{% endif %}"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('admin') }}" class="flex items-center gap-3 px-3 py-1.5 rounded-lg font-medium text-sm transition-colors {% if request.path == '/admin' or request.path.startswith('/admin/pj') %}bg-gray-100 text-gray-900 border border-gray-200{% else %}text-gray-600 hover:bg-gray-100 border border-transparent{% endif %}">
+                            <i class="fa-solid fa-users-gear w-5 text-center {% if request.path == '/admin' or request.path.startswith('/admin/pj') %}text-brand-600{% else %}text-gray-400{% endif %}"></i>
+                            Gestão de PJs
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('agrupadores') }}" class="flex items-center gap-3 px-3 py-1.5 rounded-lg font-medium text-sm transition-colors {% if request.path.startswith('/admin/agrupadores') %}bg-gray-100 text-gray-900 border border-gray-200{% else %}text-gray-600 hover:bg-gray-100 border border-transparent{% endif %}">
+                            <i class="fa-solid fa-sliders w-5 text-center {% if request.path.startswith('/admin/agrupadores') %}text-brand-600{% else %}text-gray-400{% endif %}"></i>
+                            Configuração e Gestão
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('admin_usuarios') }}" class="flex items-center gap-3 px-3 py-1.5 rounded-lg font-medium text-sm transition-colors {% if request.path.startswith('/admin/usuarios') %}bg-gray-100 text-gray-900 border border-gray-200{% else %}text-gray-600 hover:bg-gray-100 border border-transparent{% endif %}">
+                            <i class="fa-solid fa-users-gear w-5 text-center {% if request.path.startswith('/admin/usuarios') %}text-brand-600{% else %}text-gray-400{% endif %}"></i>
+                            Gestão de Usuários
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- User Profile -->
+            <div class="mt-auto pt-4 pb-2 border-t border-gray-100">
+                <div class="flex items-center gap-3 px-3 py-2 bg-gray-50 rounded-xl border border-gray-100">
+                    <div class="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center text-white font-bold text-sm">
+                        {% if current_user.is_authenticated %}
+                            {{ current_user.username[0].upper() }}
+                        {% else %}
+                            <i class="fa-solid fa-user"></i>
+                        {% endif %}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-gray-900 truncate">
+                            {% if current_user.is_authenticated %}
+                                {{ current_user.username }}
+                            {% else %}
+                                Visitante
+                            {% endif %}
+                        </p>
+                        <p class="text-xs text-gray-500 truncate">
+                            {% if current_user.is_authenticated %}
+                                {% if current_user.is_editor %}Administrador{% else %}Visualizador{% endif %}
+                            {% else %}
+                                Somente Leitura
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% if current_user.is_authenticated %}
+                    <a href="/logout" class="text-gray-400 hover:text-red-500 transition-colors p-1" title="Sair">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    </a>
+                    {% else %}
+                    <a href="/login" class="text-gray-400 hover:text-brand-600 transition-colors p-1" title="Login">
+                        <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </aside>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login – Via Uno RH</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            50: '#f9fafb',
+                            100: '#f3f4f6',
+                            500: '#374151',
+                            600: '#1f2937',
+                            700: '#111827',
+                            800: '#0f172a',
+                            900: '#000000',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen antialiased text-gray-900">
+    
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-100 p-10 transform transition-all duration-300 hover:-translate-y-1">
+        
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-brand-600 text-white rounded-2xl shadow-lg mb-4">
+                <i class="fa-solid fa-shoe-prints text-3xl"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Via Uno</h1>
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Área Administrativa</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm font-medium flex items-center gap-3">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('login') }}" class="space-y-5">
+            
+            <div>
+                <label for="username" class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Usuário</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fa-solid fa-user text-gray-400"></i>
+                    </div>
+                    <input type="text" id="username" name="username" placeholder="admin" required autofocus
+                        class="block w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:border-transparent transition-all shadow-sm placeholder-gray-400">
+                </div>
+            </div>
+
+            <div>
+                <label for="password" class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Senha</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fa-solid fa-lock text-gray-400"></i>
+                    </div>
+                    <input type="password" id="password" name="password" placeholder="••••••••" required
+                        class="block w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:border-transparent transition-all shadow-sm placeholder-gray-400">
+                </div>
+            </div>
+
+            <button type="submit" 
+                class="w-full py-3 px-4 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex justify-center items-center gap-2 mt-2">
+                Entrar
+                <i class="fa-solid fa-arrow-right text-sm"></i>
+            </button>
+        </form>
+
+        <div class="mt-8 text-center">
+            <a href="{{ url_for('index') }}" class="text-sm font-medium text-gray-500 hover:text-brand-600 transition-colors inline-flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i>
+                Voltar ao Dashboard
+            </a>
+        </div>
+    </div>
+
+</body>
+</html>

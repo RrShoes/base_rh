@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin – Gestão de Usuários | Via Uno RH</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 flex h-screen overflow-hidden antialiased">
+    <!-- MAIN -->
+    <div class="flex-1 flex flex-col h-screen overflow-hidden">
+        <div class="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between">
+            <h1 class="text-xl font-bold text-gray-900">Gestão de Usuários</h1>
+            <div class="flex items-center gap-4">
+                <a href="{{ url_for('admin') }}" class="text-sm font-medium text-gray-500 hover:text-gray-900">
+                    <i class="fa-solid fa-arrow-left"></i> &nbsp;Voltar ao Painel Admin
+                </a>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-8">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                    <div class="mb-6 px-4 py-3 rounded-lg text-sm font-medium flex items-center gap-2 {% if category == 'success' %}bg-green-100 text-green-800 border border-green-200{% else %}bg-red-100 text-red-800 border border-red-200{% endif %}">
+                        {% if category == 'success' %}<i class="fa-solid fa-check"></i>{% else %}<i class="fa-solid fa-triangle-exclamation"></i>{% endif %} {{ message }}
+                    </div>
+                {% endfor %}
+            {% endwith %}
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- Formulário -->
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden h-fit">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h2 class="text-base font-bold text-gray-900">Novo Usuário</h2>
+                    </div>
+                    <form method="POST" class="p-6 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nome de Usuário</label>
+                            <input type="text" name="username" required class="w-full text-sm border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 py-2 px-3">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+                            <input type="password" name="password" required class="w-full text-sm border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 py-2 px-3">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Perfil (Role)</label>
+                            <select name="role" class="w-full text-sm border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 py-2 px-3">
+                                <option value="viewer">Visualizador (Viewer)</option>
+                                <option value="editor">Administrador (Editor)</option>
+                            </select>
+                        </div>
+                        <div class="pt-4">
+                            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition-colors">
+                                <i class="fa-solid fa-user-plus mr-2"></i> Cadastrar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Tabela -->
+                <div class="lg:col-span-2 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h2 class="text-base font-bold text-gray-900">Usuários Cadastrados</h2>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Usuário</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Perfil</th>
+                                    <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                {% for u in users %}
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">#{{ u.id }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ u.username }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                        {% if u.role == 'editor' %}
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                            <i class="fa-solid fa-shield-halved"></i> Editor
+                                        </span>
+                                        {% else %}
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            <i class="fa-solid fa-eye"></i> Visualizador
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right">
+                                        <button onclick="openEditModal({{ u.id }}, '{{ u.username }}', '{{ u.role }}')" class="text-indigo-600 hover:text-indigo-900 mx-2" title="Editar">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </button>
+                                        <form method="POST" action="{{ url_for('admin_usuario_excluir', user_id=u.id) }}" class="inline-block" onsubmit="return confirm('Tem certeza que deseja excluir este usuário?');">
+                                            <button type="submit" class="text-red-600 hover:text-red-900" title="Excluir">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="3" class="px-6 py-10 text-center text-sm text-gray-500">
+                                        <i class="fa-solid fa-users-slash text-3xl mb-3 opacity-30 block"></i>
+                                        Nenhum usuário encontrado.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="editModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-900">Editar Usuário</h3>
+                <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <form id="editForm" method="POST" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nome de Usuário</label>
+                    <input type="text" id="edit_username" name="username" required class="w-full text-sm border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 py-2 px-3">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nova Senha <span class="text-gray-400 font-normal">(deixe em branco para não alterar)</span></label>
+                    <input type="password" id="edit_password" name="password" class="w-full text-sm border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 py-2 px-3">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Perfil (Role)</label>
+                    <select id="edit_role" name="role" class="w-full text-sm border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 py-2 px-3">
+                        <option value="viewer">Visualizador (Viewer)</option>
+                        <option value="editor">Administrador (Editor)</option>
+                    </select>
+                </div>
+                <div class="pt-4 flex gap-3 justify-end">
+                    <button type="button" onclick="closeEditModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow text-sm">
+                        Salvar Alterações
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openEditModal(userId, username, role) {
+            document.getElementById('editForm').action = '/admin/usuarios/editar/' + userId;
+            document.getElementById('edit_username').value = username;
+            document.getElementById('edit_role').value = role;
+            document.getElementById('edit_password').value = '';
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
