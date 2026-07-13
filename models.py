@@ -197,3 +197,23 @@ class OpcaoAgrupador(db.Model):
             'grupo': self.grupo,
             'nome': self.nome
         }
+
+class MetaCentroCusto(db.Model):
+    __tablename__ = 'meta_centro_custo'
+    id = db.Column(db.Integer, primary_key=True)
+    centro_custo = db.Column(db.String(200), nullable=False)
+    mes_ref = db.Column(db.String(7), nullable=False) # YYYY-MM
+    meta_pessoas = db.Column(db.Integer, nullable=False, default=0)
+
+    __table_args__ = (
+        db.UniqueConstraint('centro_custo', 'mes_ref', name='uq_meta_cc'),
+    )
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'centro_custo': self.centro_custo,
+            'mes_ref': self.mes_ref,
+            'meta_pessoas': self.meta_pessoas
+        }
+

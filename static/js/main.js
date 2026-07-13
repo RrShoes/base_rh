@@ -525,12 +525,21 @@ const updateTable = (listaAgrupada, totalPessoas, totalCusto) => {
     }
     
     // Calculate Totals for the new summary row
-    let sumClt = 0, sumPj = 0, sumReg = 0;
+    let sumClt = 0, sumPj = 0, sumReg = 0, sumMeta = 0;
     listaAgrupada.forEach(item => {
         sumClt += item.qtd_clt || 0;
         sumPj += item.qtd_pj || 0;
         sumReg += item.sit_1 || 0;
+        sumMeta += item.meta_pessoas || 0;
     });
+
+    const difTotal = totalPessoas - sumMeta;
+    let badgeTotal = '-';
+    if (sumMeta > 0) {
+        if (difTotal > 0) badgeTotal = `<span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">+${difTotal}</span>`;
+        else if (difTotal < 0) badgeTotal = `<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">${difTotal}</span>`;
+        else badgeTotal = `<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">No alvo</span>`;
+    }
 
     // Create Totals Row
     const trTotal = document.createElement('tr');
@@ -542,6 +551,8 @@ const updateTable = (listaAgrupada, totalPessoas, totalCusto) => {
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">${formatNumber(sumClt)}</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">${formatNumber(sumPj)}</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">100,00%</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">${sumMeta > 0 ? formatNumber(sumMeta) : '-'}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">${badgeTotal}</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">${formatCurrency(totalCusto)}</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">${totalCusto === -1 ? '***' : '100,00%'}</td>
     `;
@@ -560,12 +571,22 @@ const updateTable = (listaAgrupada, totalPessoas, totalCusto) => {
         const formattedPctPessoas = pctPessoas.toFixed(2).replace('.', ',') + '%';
         const formattedPctCusto = item.custo_total === -1 ? '***' : pctCusto.toFixed(2).replace('.', ',') + '%';
 
+        const difItem = item.total_pessoas - (item.meta_pessoas || 0);
+        let badgeItem = '-';
+        if (item.meta_pessoas > 0) {
+            if (difItem > 0) badgeItem = `<span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">+${difItem}</span>`;
+            else if (difItem < 0) badgeItem = `<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">${difItem}</span>`;
+            else badgeItem = `<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">No alvo</span>`;
+        }
+
         tr.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.agrupador}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 text-center">${formatNumber(item.total_pessoas)}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${formatNumber(item.qtd_clt)}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${formatNumber(item.qtd_pj)}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${formattedPctPessoas}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${item.meta_pessoas > 0 ? formatNumber(item.meta_pessoas) : '-'}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">${badgeItem}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">${formatCurrency(item.custo_total)}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">${formattedPctCusto}</td>
         `;

@@ -122,6 +122,7 @@
         <div id="flashContainer"></div>
         <div class="tabs">
             <button class="tab-btn active" id="tabBtnCC" onclick="switchTab('cc')"><i class="fa-solid fa-sitemap"></i> Por Centro de Custo</button>
+            <button class="tab-btn" id="tabBtnMetas" onclick="switchTab('metas')"><i class="fa-solid fa-bullseye"></i> Metas de Headcount</button>
             <button class="tab-btn" id="tabBtnPessoa" onclick="switchTab('pessoa')"><i class="fa-solid fa-user-pen"></i> Por Pessoa (Exceções)</button>
             <button class="tab-btn" id="tabBtnOpcoes" onclick="switchTab('opcoes')"><i class="fa-solid fa-tags"></i> Cadastros Base</button>
         </div>
@@ -281,6 +282,46 @@
     <button class="btn btn-primary btn-sm" onclick="saveAllCC()"><i class="fa-solid fa-floppy-disk"></i> Salvar agora</button>
     <button class="btn btn-secondary btn-sm" onclick="discardCC()">Descartar</button>
 </div>
+</div>
+
+<!-- SAVE BAR METAS -->
+<div class="save-bar" id="saveBarMetas">
+    <span id="saveBarMetasText">Alteracoes nao salvas</span>
+    <button class="btn btn-primary btn-sm" id="btnSaveMetas" onclick="saveAllMetas()"><i class="fa-solid fa-floppy-disk"></i> Salvar agora</button>
+    <button class="btn btn-secondary btn-sm" onclick="discardMetas()">Descartar</button>
+</div>
+
+<!-- TAB: METAS -->
+<div class="tab-pane" id="paneMetas">
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <div class="search-box">
+                <i class="fa-solid fa-search"></i>
+                <input type="text" id="searchMetas" placeholder="Buscar centro de custo..." onkeyup="filterMetas()">
+            </div>
+            <select class="filter-select" id="mesRefMetas" onchange="loadMetas()">
+                <!-- filled dynamically -->
+            </select>
+        </div>
+    </div>
+    <div class="table-card">
+        <div class="table-header">
+            <h2><i class="fa-solid fa-bullseye" style="color:var(--accent); margin-right:8px;"></i> Metas de Headcount por Centro de Custo</h2>
+            <span class="row-count" id="countMetas">0 registros</span>
+        </div>
+        <table id="tableMetas">
+            <thead>
+                <tr>
+                    <th style="width: 70%">Centro de Custo</th>
+                    <th style="width: 30%">Meta de Pessoas</th>
+                </tr>
+            </thead>
+            <tbody id="metasBody">
+                <!-- Dynamic -->
+            </tbody>
+        </table>
+    </div>
+</div>
 
 <!-- SAVE BAR PESSOA -->
 <div class="save-bar" id="saveBarPessoa">
@@ -350,6 +391,7 @@
 
 <script>
 let ccData = [], dirtyRows = new Map(), pessoasCache = null;
+let metasData = [], dirtyMetas = new Map();
 let opcoesCache = { 1: [], 2: [], 3: [] };
 
 function switchTab(tab) {
@@ -357,17 +399,21 @@ function switchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
     const isCC = tab==='cc';
     const isOpcoes = tab==='opcoes';
+    const isMetas = tab==='metas';
     
     if(isCC) document.getElementById('paneCC').classList.add('active');
     else if(isOpcoes) document.getElementById('paneOpcoes').classList.add('active');
+    else if(isMetas) document.getElementById('paneMetas').classList.add('active');
     else document.getElementById('panePessoa').classList.add('active');
     
     if(isCC) document.getElementById('tabBtnCC').classList.add('active');
     else if(isOpcoes) document.getElementById('tabBtnOpcoes').classList.add('active');
+    else if(isMetas) document.getElementById('tabBtnMetas').classList.add('active');
     else document.getElementById('tabBtnPessoa').classList.add('active');
     
     if(tab==='pessoa') loadPessoas();
     if(tab==='opcoes') renderAllOpcoes();
+    if(tab==='metas') loadMetas();
 }
 
 function showFlash(msg, type='success') {
@@ -415,7 +461,7 @@ async function loadMesesDisponiveis() {
 
 function populateMesSelectors() {
     const ultimo = MESES_ORDER[MESES_ORDER.length - 1] || '2026-06';
-    ['mesRefCC','mesRefPessoa'].forEach(selId => {
+    ['mesRefCC','mesRefPessoa','mesRefMetas'].forEach(selId => {
         const sel = document.getElementById(selId);
         if (!sel) return;
         sel.innerHTML = MESES_ORDER.map(m =>
@@ -427,6 +473,7 @@ function populateMesSelectors() {
 
 function getMesCC() { return document.getElementById('mesRefCC')?.value || MESES_ORDER[MESES_ORDER.length-1] || '2026-06'; }
 function getMesPessoa() { return document.getElementById('mesRefPessoa')?.value || MESES_ORDER[MESES_ORDER.length-1] || '2026-06'; }
+function getMesMetas() { return document.getElementById('mesRefMetas')?.value || MESES_ORDER[MESES_ORDER.length-1] || '2026-06'; }
 
 function getPrevMes(mes) {
     const idx = MESES_ORDER.indexOf(mes);
@@ -965,6 +1012,127 @@ async function deleteOpcao(id, nome) {
             await loadOpcoes();
         }
     });
+}
+
+/* ── TAB: METAS ── */
+async function loadMetas() {
+    const mes = getMesMetas();
+    
+    const ccRes = await fetch('/api/pessoas/centros');
+    const ccJson = await ccRes.json();
+    const centros = ccJson.data || [];
+    
+    const metasRes = await fetch('/api/metas/cc');
+    const metasJson = await metasRes.json();
+    const allMetas = metasJson.data || [];
+    
+    const metasByMes = {};
+    const meses_metas = [];
+    allMetas.forEach(m => {
+        if (!metasByMes[m.mes_ref]) {
+            metasByMes[m.mes_ref] = {};
+            meses_metas.push(m.mes_ref);
+        }
+        metasByMes[m.mes_ref][m.centro_custo.toLowerCase()] = m.meta_pessoas;
+    });
+    
+    meses_metas.sort();
+    
+    function bestMes(mes_row, sorted_meses) {
+        const candidatos = sorted_meses.filter(m => m <= mes_row);
+        return candidatos.length > 0 ? candidatos[candidatos.length - 1] : null;
+    }
+    
+    const best_m = bestMes(mes, meses_metas);
+    
+    metasData = centros.map(cc => {
+        const ccLower = cc.toLowerCase();
+        let meta = 0;
+        if (best_m && metasByMes[best_m]) {
+            meta = metasByMes[best_m][ccLower] || 0;
+        }
+        return { centro_custo: cc, meta_pessoas: meta, mes_ref: mes };
+    });
+    
+    dirtyMetas.clear();
+    renderMetas(metasData);
+    updateSaveBarMetas();
+}
+
+function renderMetas(rows) {
+    document.getElementById('countMetas').textContent = `${rows.length} registros`;
+    const tbody = document.getElementById('metasBody');
+    if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="2"><div class="empty"><i class="fa-solid fa-inbox"></i><p>Nenhum centro de custo encontrado.</p></div></td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = rows.map(r => `
+        <tr data-cc="${escHtml(r.centro_custo)}">
+            <td><strong>${escHtml(r.centro_custo)}</strong></td>
+            <td><input type="number" min="0" class="editable-input" value="${r.meta_pessoas}" onchange="markMetaDirty('${escHtml(r.centro_custo)}', this.value)" style="max-width:150px; font-weight:600; font-size:14px; text-align:center;"></td>
+        </tr>
+    `).join('');
+}
+
+function filterMetas() {
+    const q = document.getElementById('searchMetas').value.toLowerCase();
+    renderMetas(metasData.filter(r => r.centro_custo.toLowerCase().includes(q)));
+}
+
+function markMetaDirty(cc, value) {
+    dirtyMetas.set(cc, value);
+    const row = document.querySelector(`#metasBody tr[data-cc="${cc}"]`);
+    if(row) row.classList.add('dirty');
+    updateSaveBarMetas();
+}
+
+function updateSaveBarMetas() {
+    const bar = document.getElementById('saveBarMetas');
+    const txt = document.getElementById('saveBarMetasText');
+    const btn = document.getElementById('btnSaveMetas');
+    if (dirtyMetas.size > 0) {
+        bar.classList.add('visible');
+        txt.innerHTML = `<b>${dirtyMetas.size}</b> alteração(ões) pendente(s) no mês selecionado.`;
+        btn.disabled = false;
+    } else {
+        bar.classList.remove('visible');
+        btn.disabled = true;
+    }
+}
+
+function discardMetas() {
+    dirtyMetas.clear();
+    updateSaveBarMetas();
+    filterMetas(); // re-render without dirty highlights and original values
+}
+
+async function saveAllMetas() {
+    const mes = getMesMetas();
+    const btn = document.getElementById('btnSaveMetas');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando...';
+    
+    const items = Array.from(dirtyMetas.entries()).map(([cc, val]) => ({
+        centro_custo: cc,
+        meta_pessoas: val
+    }));
+    
+    const res = await fetch('/api/metas/cc/bulk', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ mes_ref: mes, items: items })
+    });
+    
+    const j = await res.json();
+    if (j.success) {
+        showFlash(`Sucesso: ${j.saved} metas atualizadas para ${mesLabel(mes)}.`);
+        await loadMetas(); // reload clean data
+    } else {
+        showFlash('Erro ao salvar metas: ' + j.error, 'error');
+    }
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Salvar agora';
 }
 
 // Initial load sequence

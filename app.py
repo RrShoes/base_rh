@@ -1,7 +1,7 @@
 import os
 from flask import Flask, render_template, jsonify, request, redirect, url_for, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from models import db, User, PjContrato, CltRegistro, AgrupadorCC, AgrupadorPessoa, OpcaoAgrupador
+from models import db, User, PjContrato, CltRegistro, AgrupadorCC, AgrupadorPessoa, OpcaoAgrupador, MetaCentroCusto
 from data_processor import load_and_process_data
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -444,6 +444,51 @@ def api_agrupadores_cc_delete(reg_id):
     db.session.delete(reg)
     db.session.commit()
     return jsonify({'success': True})
+
+
+# --- Metas ---
+
+@app.route('/api/metas/cc', methods=['GET'])
+@editor_required
+def api_metas_cc_list():
+    mes = request.args.get('mes', '')
+    query = MetaCentroCusto.query
+    if mes:
+        query = query.filter_by(mes_ref=mes)
+    registros = query.order_by(MetaCentroCusto.centro_custo).all()
+    return jsonify({'success': True, 'data': [r.to_dict() for r in registros]})
+
+@app.route('/api/metas/cc/bulk', methods=['POST'])
+@editor_required
+def api_metas_cc_bulk():
+    """Salva múltiplas metas em lote (upsert)."""
+    items = request.json.get('items', [])
+    mes = request.json.get('mes_ref', '2026-06')
+    try:
+        for item in items:
+            cc = item.get('centro_custo', '').strip()
+            if not cc:
+                continue
+            meta_pessoas = item.get('meta_pessoas')
+            if meta_pessoas is None or meta_pessoas == '':
+                meta_pessoas = 0
+            else:
+                meta_pessoas = int(meta_pessoas)
+                
+            reg = MetaCentroCusto.query.filter_by(centro_custo=cc, mes_ref=mes).first()
+            if reg:
+                reg.meta_pessoas = meta_pessoas
+            else:
+                db.session.add(MetaCentroCusto(
+                    centro_custo=cc,
+                    mes_ref=mes,
+                    meta_pessoas=meta_pessoas
+                ))
+        db.session.commit()
+        return jsonify({'success': True, 'saved': len(items)})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 # --- Pessoas (Exceções individuais) ---

@@ -150,8 +150,10 @@ def load_and_process_data():
         # cc_rules_by_mes: {mes_ref: {(centro_custo, tipo_contrato): row}}
         excecoes_by_mes = {}
         cc_rules_by_mes = {}
+        metas_by_mes = {}
         meses_pessoa = []
         meses_cc = []
+        meses_metas = []
         try:
             import sqlite3
             conn = sqlite3.connect(db_path, timeout=10)
@@ -168,12 +170,19 @@ def load_and_process_data():
                     cc_rules_by_mes[m] = {}
                     meses_cc.append(m)
                 cc_rules_by_mes[m][(str(r['centro_custo']).strip().lower(), str(r['tipo_contrato']).strip())] = r
+            for r in conn.execute("SELECT * FROM meta_centro_custo ORDER BY mes_ref").fetchall():
+                m = str(r['mes_ref'])
+                if m not in metas_by_mes:
+                    metas_by_mes[m] = {}
+                    meses_metas.append(m)
+                metas_by_mes[m][str(r['centro_custo']).strip().lower()] = int(r['meta_pessoas'])
             conn.close()
         except Exception:
             pass
-
+        
         meses_pessoa_sorted = sorted(set(meses_pessoa))
         meses_cc_sorted = sorted(set(meses_cc))
+        meses_metas_sorted = sorted(set(meses_metas))
 
         def _best_mes(mes_row, meses_sorted):
             """Retorna o mes disponivel mais recente <= mes_row, ou None."""
@@ -326,6 +335,10 @@ def load_and_process_data():
             centros = []
             
             for _, row in df_mes_centro.iterrows():
+                cc = str(row['centro_custo']).strip().lower()
+                best_m = _best_mes(mes, meses_metas_sorted)
+                meta = metas_by_mes.get(best_m, {}).get(cc, 0) if best_m else 0
+
                 centros.append({
                     'agrupador': row['centro_custo'],
                     'agrupador1': str(row['agrupador1']) if row['agrupador1'] else '',
@@ -334,6 +347,7 @@ def load_and_process_data():
                     'qtd_clt': int(row['qtd_clt']),
                     'qtd_pj': int(row['qtd_pj']),
                     'total_pessoas': int(row['qtd_clt']) + int(row['qtd_pj']),
+                    'meta_pessoas': meta,
                     'custo_total': float(row['custo_total']),
                     'custo_clt': float(row['custo_clt']),
                     'custo_pj': float(row['custo_pj']),
